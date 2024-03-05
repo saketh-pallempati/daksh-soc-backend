@@ -30,26 +30,30 @@ router.post("/signup", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.json({ message: "user is not registered" });
-  }
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "user is not registered" });
+    }
 
-  const validPassword = await bcrypt.compare(password, user.password);
-  if (!validPassword) {
-    return res.json({ message: "password is incorrect" });
-  }
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ message: "password is incorrect" });
+    }
 
-  const token = jwt.sign({ id: user._id }, process.env.KEY, {
-    expiresIn: "3h",
-  });
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "none",
-    secure: true,
-  });
-  return res.json({ status: true, message: "login successfully" });
+    const token = jwt.sign({ id: user._id }, process.env.KEY, {
+      expiresIn: "3h",
+    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    });
+    return res.json({ status: true, message: "login successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
 });
 
 router.post("/forgot-password", async (req, res) => {
@@ -116,6 +120,7 @@ const verifyUser = async (req, res, next) => {
       return res.json({ status: false, message: "User not found" });
     }
     req.user = user;
+    console.log(`Request made by: ${req.user.username}`);
     next();
   } catch (err) {
     return res.json(err);
@@ -123,7 +128,7 @@ const verifyUser = async (req, res, next) => {
 };
 
 router.get("/verify", verifyUser, (req, res) => {
-  // Return the user in the response withot vault password
+  // Return the user in the response withot vault Password
   return res.json({ status: true, message: "authorized", user: req.user });
 });
 router.get("/logout", (req, res) => {
@@ -131,5 +136,6 @@ router.get("/logout", (req, res) => {
   return res.json({ status: true });
 });
 router.use("/game", verifyUser, Game);
+// router.use('/game', Game);
 
 export { router as UserRouter };

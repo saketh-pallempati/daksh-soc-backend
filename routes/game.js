@@ -22,10 +22,15 @@ function getInput() {
     });
   });
 }
+router.post("/message", (req, res) => {
+  const { message } = req.body;
+  console.log(message);
+  res.json({ message: "Message received" });
+});
 
-router.get("/check", async (req, res) => {
-  const q = req.body.q;
-  console.log(q);
+router.post("/check", async (req, res) => {
+  const { comment } = req.body;
+  console.log(comment);
   let x = await getInput();
   if (x === 1) {
     return res.json({ flag: true });
@@ -34,7 +39,8 @@ router.get("/check", async (req, res) => {
 });
 
 router.get("/query", (req, res) => {
-  const id = req.query.id;
+  const { id } = req.query;
+  console.log(id);
   if (id == "id") {
     return res.json({ flag: true });
   }
@@ -42,19 +48,21 @@ router.get("/query", (req, res) => {
 });
 
 router.get("/hit", (req, res) => {
-  res.json({ message: "Dos done" });
+  res.json({
+    message: "steghide extract -sf <stego_image> -xf <extracted_data>",
+  });
 });
 
 router.get("/leaderboard", async (req, res) => {
   const users = await User.find({}).sort({ score: -1 });
   return res.json(users);
 });
-// Lot to think of here is it authenticated route only one source of truth
+
 router.post("/update", async (req, res) => {
   const { id, score } = req.body;
   const user = await User.findOneAndUpdate(
     { _id: id },
-    { score: score },
+    { $inc: { score: score } },
     { new: true }
   );
   if (!user) {
@@ -70,19 +78,55 @@ router.post("/sqlInjection", (req, res) => {
   }
   return res.json({ message: "Invalid credentials", flag: false });
 });
+// one link for image src link
+// radnom variable in variable
+// console.log('')
+// we need a place js 
+// xss and sql 
+// xss 
+// store usrename and pswd in a table
+// select * from tablename where username = 'admin' and password = 'admin'or'1'='1'
+// return boolean (null / not)
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-router.get("/images/:imageNum", (req, res) => {
-  console.log(req.params.imageNum);
-  res.sendFile(path.join(__dirname, "/public/" + req.params.imageNum + ".jpg"));
+router.get("/images", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/" + req.user.src + ".jpg"));
 });
-router.get('/chechVault', (req, res) =>{
-  if(req.body.vaultPassword === user.vaultPassword){
-    return res.json({message: "Vault opened"})
+
+router.get("/allVaults", async (req, res) => {
+  const users = await User.find({}, { username: 1 });
+  res.json(users);
+});
+
+router.post("/chechVault", async (req, res) => {
+  const { passwordEntered, userId } = req.body;
+  const user = await User.findById(userId);
+  if (passwordEntered === user.vaultPassword) {
+    return res.json({ message: "Vault opened", flag: true, pic: user.pic });
+  } else {
+    return res.json({ message: "Invalid password", flag: false });
   }
-})
+});
+
+router.get("/addVault", async (req, res) => {
+  const currUserId = req.user._id;
+  const other = req.body.userId;
+  const user = await User.findById(currUserId);
+  const otherUser = await User.findById(other);
+  user.pic.push(...otherUser.pic);
+  await user.save();
+  res.json({ message: "Images added" });
+});
+
+router.get("/deleteVault", async (req, res) => {
+  const other = req.body.userId;
+  const otherUser = await User.findById(other);
+  otherUser.pic = [];
+  await otherUser.save();
+  res.json({ message: "Images deleted" });
+});
 
 export { router as Game };
