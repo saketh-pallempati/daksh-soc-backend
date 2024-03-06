@@ -81,9 +81,9 @@ router.post("/sqlInjection", (req, res) => {
 // one link for image src link
 // radnom variable in variable
 // console.log('')
-// we need a place js 
-// xss and sql 
-// xss 
+// we need a place js
+// xss and sql
+// xss
 // store usrename and pswd in a table
 // select * from tablename where username = 'admin' and password = 'admin'or'1'='1'
 // return boolean (null / not)
@@ -97,11 +97,11 @@ router.get("/images", (req, res) => {
 });
 
 router.get("/allVaults", async (req, res) => {
-  const users = await User.find({}, { username: 1 });
+  const users = await User.find({}, { username: 1, _id: 1 });
   res.json(users);
 });
 
-router.post("/chechVault", async (req, res) => {
+router.post("/checkVault", async (req, res) => {
   const { passwordEntered, userId } = req.body;
   const user = await User.findById(userId);
   if (passwordEntered === user.vaultPassword) {
@@ -111,17 +111,20 @@ router.post("/chechVault", async (req, res) => {
   }
 });
 
-router.get("/addVault", async (req, res) => {
+router.post("/addVault", async (req, res) => {
   const currUserId = req.user._id;
   const other = req.body.userId;
   const user = await User.findById(currUserId);
   const otherUser = await User.findById(other);
-  user.pic.push(...otherUser.pic);
+  User.updateOne(
+    { _id: user._id },
+    { $addToSet: { pic: { $each: otherUser.pic } } }
+  );
   await user.save();
   res.json({ message: "Images added" });
 });
 
-router.get("/deleteVault", async (req, res) => {
+router.delete("/deleteVault", async (req, res) => {
   const other = req.body.userId;
   const otherUser = await User.findById(other);
   otherUser.pic = [];
