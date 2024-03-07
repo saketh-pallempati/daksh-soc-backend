@@ -1,48 +1,50 @@
 import express from "express";
 import { User } from "../models/User.js";
-import prompt from "prompt";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 const router = express.Router();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-function getInput() {
-  prompt.start();
-  return new Promise((resolve, reject) => {
-    prompt.get(["number"], function (err, result) {
-      if (err) {
-        reject(err);
-      }
-      const num = parseInt(result.number);
-      if (num === 1 || num === 0) {
-        console.log(`You entered ${num}`);
-        resolve(num);
-      } else {
-        console.log("Invalid input. Please enter 1 or 0.");
-        resolve(getInput());
-      }
-    });
-  });
-}
+// function getInput() {
+//   prompt.start();
+//   return new Promise((resolve, reject) => {
+//     prompt.get(["number"], function (err, result) {
+//       if (err) {
+//         reject(err);
+//       }
+//       const num = parseInt(result.number);
+//       if (num === 1 || num === 0) {
+//         console.log(`You entered ${num}`);
+//         resolve(num);
+//       } else {
+//         console.log("Invalid input. Please enter 1 or 0.");
+//         resolve(getInput());
+//       }
+//     });
+//   });
+// }
+
 router.post("/message", (req, res) => {
   const { message } = req.body;
-  console.log(message);
+  console.log(`Message by: ${req.user.username}=> ${message}`);
+  console.log();
   res.json({ message: "Message received" });
 });
 
-router.post("/check", async (req, res) => {
-  console.log(`Request made by: ${req.user.username}`);
-  const { comment } = req.body;
-  console.log(comment);
-  let x = await getInput();
-  if (x === 1) {
-    res.cookie = "hint=Use Dev tools to change opacity of the image";
-    return res.json({ flag: true });
-  }
-  return res.json({ flag: false });
-});
+// const ans = [1, 2, 3, 4, 5];
+// const hints = [1, 2, 3, 4, 5];
+// router.post("/check", async (req, res) => {
+//   const { comment } = req.body;
+//   if (ans.indexOf(comment) !== -1) {
+//     return res.json({
+//       flag: true,
+//       hint: hints[ans.indexOf(comment)],
+//     });
+//   } else {
+//     return res.json({ flag: false });
+//   }
+// });
 
 router.get("/hit", (req, res) => {
   res.json({
@@ -57,6 +59,7 @@ router.post("/sqlInjection", (req, res) => {
   }
   return res.json({ message: "Invalid credentials", flag: false });
 });
+
 router.get("/images", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/" + req.user.src + ".jpg"));
 });
@@ -67,34 +70,53 @@ router.get("/allVaults", async (req, res) => {
 });
 
 router.post("/checkVault", async (req, res) => {
-  const { passwordEntered, userId } = req.body;
-  const user = await User.findById(userId);
-  if (passwordEntered === user.vaultPassword) {
-    return res.json({ message: "Vault opened", flag: true, pic: user.pic });
-  } else {
-    return res.json({ message: "Invalid password", flag: false });
+  const { userId, passwordEntered } = req.body;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (passwordEntered === user.vaultPassword) {
+      return res.json({ message: "Vault opened", flag: true, pic: user.pic });
+    } else {
+      return res.json({ message: "Invalid password", flag: false });
+    }
+  } catch (err) {
+    return res.status(500).json({ message: "An error occurred", error: err });
   }
 });
 
 router.post("/addVault", async (req, res) => {
-  const currUserId = req.user._id;
-  const other = req.body.userId;
-  const user = await User.findById(currUserId);
-  const otherUser = await User.findById(other);
-  await User.updateOne(
-    { _id: user._id },
-    { $addToSet: { pic: { $each: otherUser.pic } } }
-  );
-  await user.save();
-  res.json({ message: "Images added" });
+  try {
+    const currUserId = req.user._id;
+    const other = req.body.userId;
+    const otherUser = await User.findById(other);
+    if (!otherUser) {
+      return res.status(404).json({ message: "Other user not found" });
+    }
+    await User.updateOne(
+      { _id: currUserId },
+      { $addToSet: { pic: { $each: otherUser.pic } } }
+    );
+    res.json({ message: "Images added" });
+  } catch (err) {
+    res.status(500).json({ message: "An error occurred", error: err });
+  }
 });
 
 router.delete("/deleteVault", async (req, res) => {
-  const other = req.body.userId;
-  const otherUser = await User.findById(other);
-  otherUser.pic = [];
-  await otherUser.save();
-  res.json({ message: "Images deleted" });
+  const userId = req.body.userId;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.pic = [];
+    await user.save();
+    res.json({ message: "Images deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "An error occurred", error: err });
+  }
 });
 
 export { router as Game };

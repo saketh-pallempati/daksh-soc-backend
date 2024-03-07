@@ -17,7 +17,7 @@ const nums = [
   114441, 612524, 225164, 356314, 435111, 455361, 114151, 124354, 515443,
   625256, 413411, 153155,
 ];
-let i = 0;
+
 let userId = "";
 router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
@@ -27,18 +27,19 @@ router.post("/signup", async (req, res) => {
   }
 
   const hashpassword = await bcrypt.hash(password, 10);
-  const vp = nums[i];
+  const i = await User.countDocuments();
   const newUser = new User({
     username,
     email,
     password: hashpassword,
-    vaultPassword: vp,
+    vaultPassword: nums[i],
     src: i,
     pic: [i - 1],
   });
+  const firstUser = await User.findOne().sort({ _id: 1 });
 
-  if (userId) {
-    await User.findByIdAndUpdate(userId, { pic: [i] });
+  if (firstUser) {
+    await User.findByIdAndUpdate(firstUser._id, { pic: [i] });
   }
   const savedUser = await newUser.save();
   if (!savedUser) {
@@ -47,7 +48,6 @@ router.post("/signup", async (req, res) => {
   if (i == 0) {
     userId = savedUser._id;
   }
-  i++;
   return res.json({ status: true, message: "record registered" });
 });
 
@@ -129,6 +129,10 @@ router.post("/reset-password/:token", async (req, res) => {
     return res.json("invalid token");
   }
 });
+router.get("/logout", (req, res) => {
+  res.clearCookie("token");
+  return res.json({ status: true });
+});
 
 const verifyUser = async (req, res, next) => {
   try {
@@ -151,15 +155,32 @@ const verifyUser = async (req, res, next) => {
 router.get("/verify", verifyUser, (req, res) => {
   let user = req.user.toObject();
   delete user.password;
+  delete user.vaultPassword;
   return res.json({ status: true, message: "authorized", user: user });
 });
-router.get("/logout", (req, res) => {
-  res.clearCookie("token");
-  return res.json({ status: true });
-});
+
 router.get("/vaultImg", (req, res) => {
   console.log(req.query.id);
   res.sendFile(path.join(__dirname, "../public/" + req.query.id + ".jpg"));
+});
+router.get("/leaderboard", (req, res) => {
+  User.aggregate([
+    {
+      $project: {
+        username: 1,
+        numberOfElements: { $size: "$pic" }
+      }
+    },
+    {
+      $sort: { numberOfElements: -1 }
+    }
+  ])
+  .then((users) => {
+    return res.json(users);
+  })
+  .catch((err) => {
+    return res.status(500).json({ message: "An error occurred", error: err });
+  });
 });
 router.use("/game", verifyUser, Game);
 
