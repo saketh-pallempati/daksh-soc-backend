@@ -11,14 +11,18 @@ app.use(express.json());
 app.use(express.static("public"));
 app.use(
   cors({
-    origin : ["http://localhost:5173", "http://localhost:3000", "http://localhost:3001"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:3001",
+    ],
     credentials: true,
   })
 );
 app.use(cookieParser());
 app.use("/", UserRouter);
 
-mongoose.connect("mongodb://127.0.0.1:27017/authentication");
+mongoose.connect(process.env.MONGO);
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running at http://localhost:" + process.env.PORT);

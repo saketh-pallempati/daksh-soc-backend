@@ -1,11 +1,15 @@
 import express from "express";
-const router = express.Router();
 import { User } from "../models/User.js";
 import prompt from "prompt";
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+const router = express.Router();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 function getInput() {
   prompt.start();
-
   return new Promise((resolve, reject) => {
     prompt.get(["number"], function (err, result) {
       if (err) {
@@ -38,37 +42,10 @@ router.post("/check", async (req, res) => {
   return res.json({ flag: false });
 });
 
-router.get("/query", (req, res) => {
-  const { id } = req.query;
-  console.log(id);
-  if (id == "id") {
-    return res.json({ flag: true });
-  }
-  res.json({ flag: false });
-});
-
 router.get("/hit", (req, res) => {
   res.json({
     message: "steghide extract -sf <stego_image> -xf <extracted_data>",
   });
-});
-
-router.get("/leaderboard", async (req, res) => {
-  const users = await User.find({}).sort({ score: -1 });
-  return res.json(users);
-});
-
-router.post("/update", async (req, res) => {
-  const { id, score } = req.body;
-  const user = await User.findOneAndUpdate(
-    { _id: id },
-    { $inc: { score: score } },
-    { new: true }
-  );
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
-  return res.json({ message: "Score updated", user });
 });
 
 router.post("/sqlInjection", (req, res) => {
@@ -78,22 +55,8 @@ router.post("/sqlInjection", (req, res) => {
   }
   return res.json({ message: "Invalid credentials", flag: false });
 });
-// one link for image src link
-// radnom variable in variable
-// console.log('')
-// we need a place js
-// xss and sql
-// xss
-// store usrename and pswd in a table
-// select * from tablename where username = 'admin' and password = 'admin'or'1'='1'
-// return boolean (null / not)
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 router.get("/images", (req, res) => {
-  res.sendFile(path.join(__dirname, "/public/" + req.user.src + ".jpg"));
+  res.sendFile(path.join(__dirname, "../public/" + req.user.src + ".jpg"));
 });
 
 router.get("/allVaults", async (req, res) => {
@@ -116,7 +79,7 @@ router.post("/addVault", async (req, res) => {
   const other = req.body.userId;
   const user = await User.findById(currUserId);
   const otherUser = await User.findById(other);
-  User.updateOne(
+  await User.updateOne(
     { _id: user._id },
     { $addToSet: { pic: { $each: otherUser.pic } } }
   );

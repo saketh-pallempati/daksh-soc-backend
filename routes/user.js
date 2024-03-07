@@ -5,8 +5,25 @@ import { User } from "../models/User.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { Game } from "./game.js";
-const nums = [204607, 756640];
-let i = 0; // assuimg server doesn't crash
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const nums = [
+  314651, 521236, 345431, 514216, 421361, 333633, 566322, 414143, 464212,
+  633136, 311362, 623162, 263516, 626341, 445265, 364351, 611436, 643161,
+  114441, 612524, 225164, 356314, 435111, 455361, 114151, 124354, 515443,
+  625256, 413411, 153155,
+];
+
+async function run() {
+  let i = await User.countDocuments({});
+  console.log(i);
+}
+run().catch(console.error);
+
 router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
   const user = await User.findOne({ email });
@@ -16,15 +33,15 @@ router.post("/signup", async (req, res) => {
 
   const hashpassword = await bcrypt.hash(password, 10);
   const vp = nums[i];
-  i++;
   const newUser = new User({
     username,
     email,
     password: hashpassword,
     vaultPassword: vp,
-    src: nums.indexOf(vp),
+    src: i - 1,
+    pic: [i],
   });
-
+  i++;
   await newUser.save();
   return res.json({ status: true, message: "record registed" });
 });
@@ -43,7 +60,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.KEY, {
-      expiresIn: "3h",
+      expiresIn: "36h",
     });
     res.cookie("token", token, {
       httpOnly: true,
@@ -128,14 +145,18 @@ const verifyUser = async (req, res, next) => {
 };
 
 router.get("/verify", verifyUser, (req, res) => {
-  // Return the user in the response withot vault Password
-  return res.json({ status: true, message: "authorized", user: req.user });
+  let user = req.user.toObject();
+  delete user.password;
+  return res.json({ status: true, message: "authorized", user: user });
 });
 router.get("/logout", (req, res) => {
   res.clearCookie("token");
   return res.json({ status: true });
 });
+router.get("/vaultImg", (req, res) => {
+  console.log(req.query.id);
+  res.sendFile(path.join(__dirname, "../public/" + req.query.id + ".jpg"));
+});
 router.use("/game", verifyUser, Game);
-// router.use('/game', Game);
 
 export { router as UserRouter };
