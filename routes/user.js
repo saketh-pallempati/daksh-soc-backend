@@ -17,13 +17,8 @@ const nums = [
   114441, 612524, 225164, 356314, 435111, 455361, 114151, 124354, 515443,
   625256, 413411, 153155,
 ];
-
-async function run() {
-  let i = await User.countDocuments({});
-  console.log(i);
-}
-run().catch(console.error);
-
+let i = 0;
+let userId = "";
 router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
   const user = await User.findOne({ email });
@@ -38,12 +33,22 @@ router.post("/signup", async (req, res) => {
     email,
     password: hashpassword,
     vaultPassword: vp,
-    src: i - 1,
-    pic: [i],
+    src: i,
+    pic: [i - 1],
   });
+
+  if (userId) {
+    await User.findByIdAndUpdate(userId, { pic: [i] });
+  }
+  const savedUser = await newUser.save();
+  if (!savedUser) {
+    return res.json({ status: false, message: "record not registered" });
+  }
+  if (i == 0) {
+    userId = savedUser._id;
+  }
   i++;
-  await newUser.save();
-  return res.json({ status: true, message: "record registed" });
+  return res.json({ status: true, message: "record registered" });
 });
 
 router.post("/login", async (req, res) => {
@@ -137,7 +142,6 @@ const verifyUser = async (req, res, next) => {
       return res.json({ status: false, message: "User not found" });
     }
     req.user = user;
-    console.log(`Request made by: ${req.user.username}`);
     next();
   } catch (err) {
     return res.json(err);

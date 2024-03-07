@@ -33,10 +33,12 @@ router.post("/message", (req, res) => {
 });
 
 router.post("/check", async (req, res) => {
+  console.log(`Request made by: ${req.user.username}`);
   const { comment } = req.body;
   console.log(comment);
   let x = await getInput();
   if (x === 1) {
+    res.cookie = "hint=Use Dev tools to change opacity of the image";
     return res.json({ flag: true });
   }
   return res.json({ flag: false });
