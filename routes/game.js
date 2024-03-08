@@ -86,7 +86,7 @@ router.post("/checkVault", async (req, res) => {
   }
 });
 
-router.get("/addVault", async (req, res) => {
+router.post("/addVault", async (req, res) => {
   const currUserId = req.user._id;
   const other = req.body.userId;
   const user = await User.findById(currUserId);
