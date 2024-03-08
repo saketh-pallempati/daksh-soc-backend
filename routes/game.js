@@ -86,37 +86,22 @@ router.post("/checkVault", async (req, res) => {
   }
 });
 
-router.post("/addVault", async (req, res) => {
-  try {
-    const currUserId = req.user._id;
-    const other = req.body.userId;
-    const otherUser = await User.findById(other);
-    if (!otherUser) {
-      return res.status(404).json({ message: "Other user not found" });
-    }
-    await User.updateOne(
-      { _id: currUserId },
-      { $addToSet: { pic: { $each: otherUser.pic } } }
-    );
-    res.json({ message: "Images added" });
-  } catch (err) {
-    res.status(500).json({ message: "An error occurred", error: err });
-  }
+router.get("/addVault", async (req, res) => {
+  const currUserId = req.user._id;
+  const other = req.body.userId;
+  const user = await User.findById(currUserId);
+  const otherUser = await User.findById(other);
+  user.pic.push(...otherUser.pic);
+  await user.save();
+  res.json({ message: "Images added" });
 });
 
-router.delete("/deleteVault", async (req, res) => {
-  const userId = req.body.userId;
-  try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    user.pic = [];
-    await user.save();
-    res.json({ message: "Images deleted" });
-  } catch (err) {
-    res.status(500).json({ message: "An error occurred", error: err });
-  }
+router.get("/deleteVault", async (req, res) => {
+  const other = req.body.userId;
+  const otherUser = await User.findById(other);
+  otherUser.pic = [];
+  await otherUser.save();
+  res.json({ message: "Images deleted" });
 });
 
 export { router as Game };
