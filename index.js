@@ -12,10 +12,8 @@ app.use(express.static("public"));
 app.use(
   cors({
     origin: [
-      "https://daksh-soc-2024.vercel.app",
       "https://daksh-soc-terminal.vercel.app/",
-      "http://localhost:3000",
-      "http://localhost:5173",
+      "https://daksh-soc-2024.vercel.app",
     ],
     credentials: true,
   })
