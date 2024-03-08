@@ -91,12 +91,14 @@ router.get("/addVault", async (req, res) => {
   const other = req.body.userId;
   const user = await User.findById(currUserId);
   const otherUser = await User.findById(other);
-  user.pic.push(...otherUser.pic);
-  await user.save();
+  await User.updateOne(
+    { _id: user._id },
+    { $addToSet: { pic: { $each: otherUser.pic } } }
+  );
   res.json({ message: "Images added" });
 });
 
-router.get("/deleteVault", async (req, res) => {
+router.delete("/deleteVault", async (req, res) => {
   const other = req.body.userId;
   const otherUser = await User.findById(other);
   otherUser.pic = [];
