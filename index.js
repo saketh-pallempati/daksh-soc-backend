@@ -12,7 +12,7 @@ app.use(express.static("public"));
 app.use(
   cors({
     origin: [
-      "https://daksh-soc-terminal.vercel.app/",
+      "https://daksh-soc-terminal.vercel.app",
       "https://daksh-soc-2024.vercel.app",
     ],
     credentials: true,
