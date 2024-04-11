@@ -14,6 +14,7 @@ app.use(
     origin: [
       "https://daksh-soc-terminal.vercel.app",
       "https://daksh-soc-2024.vercel.app",
+      "https://daksh-leaderboard.vercel.app/"
     ],
     credentials: true,
   })
