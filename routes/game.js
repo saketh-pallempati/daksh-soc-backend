@@ -3,6 +3,8 @@ import { User } from "../models/User.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { Server } from "socket.io";
+const io = new Server(process.env.PORT);
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,8 +29,7 @@ const __dirname = dirname(__filename);
 
 router.post("/message", (req, res) => {
   const { message } = req.body;
-  console.log(`Message by: ${req.user.username}=> ${message}`);
-  console.log();
+  io.emit("message", req.user.username, message);
   res.json({ message: "Message received" });
 });
 
