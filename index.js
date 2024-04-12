@@ -10,13 +10,12 @@ import { createServer } from "http";
 dotenv.config();
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
+global.io = new Server(httpServer, {
   cors: {
     origin: ['https://daksh-leaderboard.vercel.app'],
     credentials: true
   }
 });
-io.on('connect', (socket) => console.log(socket.id))
 app.use(express.json());
 app.use(express.static("public"));
 app.use(
@@ -39,4 +38,3 @@ mongoose.connect(process.env.MONGO);
 httpServer.listen(process.env.PORT, () => {
   console.log("Server is running at http://localhost:" + process.env.PORT);
 });
-export { io };

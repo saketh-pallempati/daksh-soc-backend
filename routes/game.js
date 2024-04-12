@@ -3,7 +3,6 @@ import { User } from "../models/User.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { io } from "../index.js";
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,7 +29,7 @@ router.post("/message", (req, res) => {
   const { message } = req.body;
   const now = new Date();
   const dateTime = now.toISOString();
-  io.emit("message", req.user.username, message, dateTime);
+  global.io.emit("message", req.user.username, message, dateTime);
   res.json({ message: "Message received" });
 });
 
