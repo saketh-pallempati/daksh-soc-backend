@@ -3,13 +3,7 @@ import { User } from "../models/User.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { Server } from "socket.io";
-import { time } from "console";
-const io = new Server(process.env.PORT, {
-  cors:{
-    origin : ['https://daksh-leaderboard.vercel.app']
-  }
-});
+import { io } from "../index.js";
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

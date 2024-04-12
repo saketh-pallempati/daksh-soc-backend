@@ -4,9 +4,19 @@ import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { UserRouter } from "./routes/user.js";
-dotenv.config();
+import { Server } from "socket.io";
+import { createServer } from "http";
 
+dotenv.config();
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ['https://daksh-leaderboard.vercel.app'],
+    credentials: true
+  }
+});
+io.on('connect', (socket) => console.log(socket.id))
 app.use(express.json());
 app.use(express.static("public"));
 app.use(
@@ -14,7 +24,7 @@ app.use(
     origin: [
       "https://daksh-soc-terminal.vercel.app",
       "https://daksh-soc-2024.vercel.app",
-      "https://daksh-leaderboard.vercel.app"
+      "https://daksh-leaderboard.vercel.app",
     ],
     credentials: true,
   })
@@ -26,6 +36,7 @@ app.get("/", (req, res) => {
 });
 mongoose.connect(process.env.MONGO);
 
-app.listen(process.env.PORT, () => {
+httpServer.listen(process.env.PORT, () => {
   console.log("Server is running at http://localhost:" + process.env.PORT);
 });
+export { io };
