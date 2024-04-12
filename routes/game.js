@@ -4,7 +4,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { Server } from "socket.io";
-const io = new Server(process.env.PORT);
+import { time } from "console";
+const io = new Server(process.env.PORT, {
+  cors:{
+    origin : ['https://daksh-leaderboard.vercel.app']
+  }
+});
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,7 +34,9 @@ const __dirname = dirname(__filename);
 
 router.post("/message", (req, res) => {
   const { message } = req.body;
-  io.emit("message", req.user.username, message);
+  const now = new Date();
+  const dateTime = now.toISOString();
+  io.emit("message", req.user.username, message, dateTime);
   res.json({ message: "Message received" });
 });
 
