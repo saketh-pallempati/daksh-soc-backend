@@ -12,8 +12,7 @@ const app = express();
 const httpServer = createServer(app);
 global.io = new Server(httpServer, {
   cors: {
-    origin: 'https://daksh-leaderboard.vercel.app',
-    methods : ["GET", "POST"]
+    origin: '*'
   }
 });
 
