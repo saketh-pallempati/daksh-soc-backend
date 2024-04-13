@@ -1,21 +1,14 @@
 import express from "express";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { UserRouter } from "./routes/user.js";
 import { Server } from "socket.io";
 import { createServer } from "http";
-
+import dotenv from "dotenv";
 dotenv.config();
-const app = express();
-const httpServer = createServer(app);
-global.io = new Server(httpServer, {
-  cors: {
-    origin: '*'
-  }
-});
 
+const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 app.use(
@@ -28,6 +21,15 @@ app.use(
     credentials: true,
   })
 );
+
+const httpServer = createServer(app);
+global.io = new Server(httpServer, {
+  cors: {
+    origin: '*'
+  }
+});
+
+
 app.use(cookieParser());
 app.use("/", UserRouter);
 app.get("/", (req, res) => {
